@@ -13,10 +13,7 @@ const port = 4000;
 const uri = process.env.MONGO_URI;
 
 mongoose
-  .connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
+  .connect(uri)
 .then(() => {
     console.log('Connected to your Dylan database');
 })
