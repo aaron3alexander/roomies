@@ -3,9 +3,9 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios';
+import axios from "axios";
 
-export default function LoginPage({setAuthenticatedUser}) {
+export default function LoginPage({ setAuthenticatedUser }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +15,7 @@ export default function LoginPage({setAuthenticatedUser}) {
       const response = await axios.post(
         "http://localhost:4000/login",
         { email, password },
-        { withCredentials: true }
+        { withCredentials: false }
       );
       const data = response.data;
       console.log("Login API response:", data); // Log the entire response for debugging
@@ -38,11 +38,11 @@ export default function LoginPage({setAuthenticatedUser}) {
         console.error("Login failed, user:", email);
       }
     } catch (error) {
+      console.log(`Logging in with Email: ${email} and Password: ${password}`);
       console.error("Error logging in:", error);
       // setShowMessage(true);
       // handle login error, e.g., show an error message
     }
-    console.log(`Logging in with Email: ${email} and Password: ${password}`);
   };
 
   return (
