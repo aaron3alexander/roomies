@@ -176,6 +176,7 @@ export default function SignUp() {
     { label: "Women’s and Gender Studies" },
     { label: "Youth and Community Studies" },
   ];
+
   const cost = [
     {
       value: 500,
@@ -186,6 +187,7 @@ export default function SignUp() {
       label: "$2000",
     },
   ];
+
   const guests = [
     {
       value: 1,
@@ -210,7 +212,7 @@ export default function SignUp() {
   ];
   const [step, setStep] = useState(0);
   // const [showMessage, setShowMessage] = useState(false);
-  //Our allergy options
+
   const allAllergies = ["Nuts", "Fish", "Dairy", "Veat", "Gluten"];
   const [fName, setfName] = useState("");
   const [lName, setlName] = useState("");
@@ -247,19 +249,13 @@ export default function SignUp() {
     } = event;
     setAllergies(typeof value === "string" ? value.split(",") : value);
   };
-  //Handle signup multiple "pages"
   const handleNext = () => {
-    // Increment the step to show the next set of preferences
     setStep((prevStep) => prevStep + 1);
   };
-  //handle back to previous "pages"
   const handleBack = () => {
-    // Increment the step to show the next set of preferences
     setStep((prevStep) => prevStep - 1);
   };
-  // const { errors } = formState;//checking for errors
   const handleSignup = async () => {
-    // Implement your Signup logic here
     const data = {
       fname: fName,
       lname: lName,
@@ -326,7 +322,7 @@ export default function SignUp() {
   // }, [wake, sleep])
 
   return (
-    <div className="w-full  h-screen flex flex-col justify-evenly items-center p-4">
+    <div className="w-full  h-fit flex flex-col justify-evenly space-y-2 items-center p-4">
       {/* {showMessage && (
         <div class="alert alert-danger show text-center" role="alert">
           This email is aleady being used! Please try a different email!
@@ -444,11 +440,10 @@ export default function SignUp() {
               </div>
             </div>
           )}
+
           {step === 1 && (
-            <div>
-              {/* Preference to live with */}
+            <div className="space-y-2 flex flex-col items-center px-1">
               <div>
-                {/* pets */}
                 <div>
                   Are you willing to live with pets?
                   <Switch
@@ -459,62 +454,79 @@ export default function SignUp() {
                     defaultChecked
                   />
                 </div>
-                {/* Prefered Gender */}
-                What Gender do you prefer to live with?
-                <Box sx={{ minWidth: 120 }}>
-                  <FormControl fullWidth>
-                    <InputLabel id="demo-simple-select-label"></InputLabel>
-                    <Select
-                      labelId="demo-simple-select-label"
-                      id="demo-simple-select"
-                      value={targetGender}
-                      label="Preference"
-                      onChange={(e) => setTargetGender(e.target.value)}
-                    >
-                      <MenuItem value={"M"}>Male</MenuItem>
-                      <MenuItem value={"F"}>Female</MenuItem>
-                      <MenuItem value={"O"}>Other</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
+                <div className="">
+                  What Gender do you prefer to live with?
+                  <Box sx={{ minWidth: 120 }}>
+                    <FormControl fullWidth>
+                      <InputLabel id="demo-simple-select-label"></InputLabel>
+                      <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={targetGender}
+                        label="Preference"
+                        onChange={(e) => setTargetGender(e.target.value)}
+                      >
+                        <MenuItem value={"M"}>Male</MenuItem>
+                        <MenuItem value={"F"}>Female</MenuItem>
+                        <MenuItem value={"O"}>Other</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </div>
               </div>
-              {/* Sleep Schedule */}
-              <div>
-                I go to sleep around
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <TimePicker
-                    views={["hours"]}
-                    label="Sleep?"
-                    value={sleep}
-                    onChange={handleSleepChange}
-                  />
-                </LocalizationProvider>
-                and wake up around
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <TimePicker
-                    views={["hours"]}
-                    label="Wake?"
-                    value={wake}
-                    onChange={handleWakeChange}
-                  />
-                </LocalizationProvider>
+              <div className="space-y-2">
+                <div className="flex items-center justify-center">
+                  I go to sleep at around
+                  <div className="ml-2 w-32 ">
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <TimePicker
+                        views={["hours"]}
+                        label="Sleep?"
+                        value={sleep}
+                        onChange={handleSleepChange}
+                        slotProps={{ textField: { size: "small" } }}
+                      />
+                    </LocalizationProvider>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center">
+                  and wake up around
+                  <div className="ml-2 w-32">
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <TimePicker
+                        views={["hours"]}
+                        label="Wake?"
+                        value={wake}
+                        onChange={handleWakeChange}
+                        slotProps={{ textField: { size: "small" } }}
+                      />
+                    </LocalizationProvider>
+                  </div>
+                </div>
               </div>
-              {/* Personality */}
-              <div>
+
+              <hr className="border-1 border-black w-2/3" />
+
+              <div className="items-center flex flex-col space-y-2">
                 How would you rate your personality?
-                <ToggleButtonGroup
-                  value={personality}
-                  exclusive
-                  onChange={(e) => setPersonality(e.target.value)}
-                >
-                  <ToggleButton value="Introvert">Introvert</ToggleButton>
-                  <ToggleButton value="Ambivert">Ambivert</ToggleButton>
-                  <ToggleButton value="Extrovert">Extrovert</ToggleButton>
-                </ToggleButtonGroup>
+                <div className="">
+                  <ToggleButtonGroup
+                    value={personality}
+                    exclusive
+                    onChange={(e) => setPersonality(e.target.value)}
+                  >
+                    <ToggleButton value="Introvert">Introvert</ToggleButton>
+                    <ToggleButton value="Ambivert">Ambivert</ToggleButton>
+                    <ToggleButton value="Extrovert">Extrovert</ToggleButton>
+                  </ToggleButtonGroup>
+                </div>
               </div>
-              {/* Loud? */}
-              <div>
-                How would you describe your average noise level?
+
+              <div className="items-center flex flex-col space-y-2">
+                <h1 className="text-center">
+                  How would you describe your average noise level?
+                </h1>
                 <ToggleButtonGroup
                   value={noise}
                   exclusive
@@ -588,7 +600,6 @@ export default function SignUp() {
                   />
                 </Box>
               </div>
-              {/* Like to Share? */}
               <div>
                 Are you open to sharing?
                 <Switch
@@ -599,7 +610,6 @@ export default function SignUp() {
                   defaultChecked
                 />
               </div>
-              {/* Budget */}
               <div>
                 What is your maximum rent cost?
                 <Box sx={{ width: 300 }}>
@@ -669,7 +679,7 @@ export default function SignUp() {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={handleSignup()}
+                  onClick={handleSignup}
                 >
                   Sign Up
                 </Button>
