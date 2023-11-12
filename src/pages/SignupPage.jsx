@@ -280,7 +280,7 @@ export default function SignUp() {
     };
     console.log(data);
     try {
-      const response = await axios.post("http://localhost:4000/register", data); //sends data to db
+      let response = await axios.post("http://localhost:4000/register", data); //sends data to db
       console.log("Basic data Registered Successfully");
       response = await axios.post("http://localhost:4000/preferences", data); //sends data to db
       console.log("Preferences Registered Successfully");

@@ -218,7 +218,7 @@ app.get('/users/current', isLoggedIn, (req, res) => {
 
 // API endpoint for user login
 app.post('/login', passport.authenticate('local'), (req, res) => {
-    // If the authentication is successful, the user will be available in req.user
+     // If the authentication is successful, the user will be available in req.user
     // Set the user as authenticated in the session
     req.login(req.user, (err) => {
         if (err) {
