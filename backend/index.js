@@ -53,7 +53,7 @@ const UserSchema = new mongoose.Schema({
         noiseLevel: String, // "Quiet", "Moderate", "Loud"
         cleanliness: String, // "Clean", "Moderate", "Messy"
         sharing: String, // "What's mine is yours", "Ask first", "Don't touch my stuff"
-        monthlyBudget: Number,
+        monthlyBudget: Number, // [500, 2000]
     }
 });
 
@@ -233,6 +233,27 @@ function preferencesToDistance(alice, bob, preference) {
     let bigger = a.length > b.length ? a : b;
     let smaller = a.length <= b.length? a : b;
     return bigger.filter((x) => smaller.includes(x)).length / bigger.length;
+  } else if (preference === "guestPolicy") {
+    const policies = ["Never", "Sometimes", "Often"];
+    return Math.abs(policies.indexOf(a) - policies.indexOf(b)) / (policies.length - 1);
+  } else if (preference === "major") {
+    return a === b ? 0 : 1;
+  } else if (preference === "personality") {
+    const personalities = ["Let's be BFFs!", "Open to hang", "Leave me alone and I'll leave you alone"];
+    return Math.abs(personalities.indexOf(a) - personalities.indexOf(b)) / (personalities.length - 1);
+  } else if (preference === "pets") {
+    return a === b ? 0 : 1;
+  } else if (preference === "noiseLevel") {
+    const noiseLevels = ["Quiet", "Moderate", "Loud"];
+    return Math.abs(noiseLevels.indexOf(a) - noiseLevels.indexOf(b)) / (noiseLevels.length - 1);
+  } else if (preference === "cleanliness") {
+    const cleanlinessLevels = ["Clean", "Moderate", "Messy"];
+    return Math.abs(cleanlinessLevels.indexOf(a) - cleanlinessLevels.indexOf(b)) / (cleanlinessLevels.length - 1);
+  } else if (preference === "sharing") {
+    const sharingLevels = ["What's mine is yours", "Ask first", "Don't touch my stuff"];
+    return Math.abs(sharingLevels.indexOf(a) - sharingLevels.indexOf(b)) / (sharingLevels.length - 1);
+  } else if (preference === 'monthlyBudget') {
+    return Math.abs(a - b) / 1500;
   }
   return 0.5;
 }
@@ -255,6 +276,16 @@ async function knn(email) {
     .sort((a, b) => distance(user, a) - distance(user, b))
     .filter((neighbor) => distance(user, neighbor) !== Infinity);
 }
+
+app.get('/knn', async (req, res) => {
+  try {
+    const neighbors = await knn(req.body.email);
+    res.json(neighbors);
+  } catch (error) {
+    console.error('Error getting neighbors:', error);
+    res.status(500).json({ message: 'Something went wrong' });
+  }
+});
 
 // Start the server
 app.listen(port, () => {
