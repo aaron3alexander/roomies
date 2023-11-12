@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import { Link } from "react-router-dom";
@@ -22,8 +23,17 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Slider from "@mui/material/Slider";
 import Switch from "@mui/material/Switch";
 import Autocomplete from "@mui/material/Autocomplete";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import "dayjs/locale/en"; // import the locale you need
+import { useNavigate } from "react-router-dom";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export default function SignUp() {
+  const navigate = useNavigate();
+  dayjs.tz.setDefault("America/Chicago");
   //Menu
   const MenuProps = {
     PaperProps: {
@@ -168,6 +178,7 @@ export default function SignUp() {
     { label: "Women’s and Gender Studies" },
     { label: "Youth and Community Studies" },
   ];
+
   const cost = [
     {
       value: 500,
@@ -178,6 +189,7 @@ export default function SignUp() {
       label: "$2000",
     },
   ];
+
   const guests = [
     {
       value: 1,
@@ -200,16 +212,17 @@ export default function SignUp() {
       label: "Quite Often",
     },
   ];
-  //Our allergy options
-  const allAllergies = ["Nuts", "Fish", "Dairy", "Veat", "Gluten"];
+  const [step, setStep] = useState(0);
+  // const [showMessage, setShowMessage] = useState(false);
+
+  const allAllergies = ["Nuts", "Fish", "Dairy", "Wheat", "Gluten"];
   const [fName, setfName] = useState("");
   const [lName, setlName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [step, setStep] = useState(0);
-  const [wake, setWake] = useState(dayjs("2022-04-17T15:00"));
-  const [sleep, setSleep] = useState(dayjs("2022-04-17T15:00"));
+  const [wake, setWake] = useState(dayjs(""));
+  const [sleep, setSleep] = useState(dayjs(""));
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [targetGender, setTargetGender] = useState("");
@@ -218,38 +231,71 @@ export default function SignUp() {
   const [allergies, setAllergies] = useState([]);
   const [company, setCompany] = useState(1);
   const [share, setShare] = useState(true);
-  const [budget, setBudget] = useState(true);
+  const [budget, setBudget] = useState();
   const [pets, setPets] = useState(true);
-  const [major, setMajor] = useState(true);
+  const [major, setMajor] = useState();
+  const [clean, setClean] = useState();
+  const [bio, setBio] = useState();
+  const [drive, setDrive] = useState();
 
+  const handleSleepChange = (newSleepTime) => {
+    setSleep(newSleepTime);
+  };
+  const handleWakeChange = (newWakeTime) => {
+    setWake(newWakeTime);
+  };
+  const handleMajor = (newMajor) => {
+    setMajor(newMajor.target.value);
+  };
   // handle multiple allergies
   const handleAllergies = (event) => {
     const {
-      target: { allergies },
+      target: { value },
     } = event;
-    setAllergies(
-      typeof allergies === "string" ? allergies.split(",") : allergies
-    );
+    setAllergies(typeof value === "string" ? value.split(",") : value);
   };
-  //Handle signup multiple "pages"
   const handleNext = () => {
-    // Increment the step to show the next set of preferences
     setStep((prevStep) => prevStep + 1);
   };
-  //handle back to previous "pages"
   const handleBack = () => {
-    // Increment the step to show the next set of preferences
     setStep((prevStep) => prevStep - 1);
   };
-  const handleSignup = () => {
-    // Implement your login logic here
-    console.log(
-      `Signing up with Email: ${email}, 
-      Password: ${password}, 
-      First Name: ${fName}, 
-      Last Name: ${lName}, 
-      Phone: ${phone}`
-    );
+  const handleSignup = async () => {
+    const data = {
+      fname: fName,
+      lname: lName,
+      phone: phone,
+      email: email,
+      password: password,
+      age: age,
+      gender: gender,
+      // major: major,
+      targetGender: targetGender,
+      wakeTime: wake.hour(),
+      sleepTime: sleep.hour(),
+      personality: personality,
+      noiseLevel: noise,
+      allergies: allergies,
+      guestPolicy: company,
+      sharing: share,
+      monthlyBudget: budget,
+      pets: pets,
+      cleanliness: clean,
+      bio: bio,
+      pfp: drive,
+    };
+    console.log(data);
+    try {
+      let response = await axios.post("http://localhost:4000/register", data); //sends data to db
+      console.log("Basic data Registered Successfully");
+      response = await axios.post("http://localhost:4000/preferences", {email,data}); //sends data to db
+      console.log("Preferences Registered Successfully");
+      console.log("Registered Successfully");
+      navigate("/");
+    } catch (error) {
+      console.log(error.response);
+      console.log("Error registering user:", error);
+    }
   };
 
   //Used to debugg
@@ -259,7 +305,12 @@ export default function SignUp() {
   // }, [wake, sleep])
 
   return (
-    <div className="w-full  h-screen flex flex-col justify-evenly items-center p-4">
+    <div className="w-full  h-fit flex flex-col justify-evenly space-y-2 items-center p-4">
+      {/* {showMessage && (
+        <div class="alert alert-danger show text-center" role="alert">
+          This email is aleady being used! Please try a different email!
+        </div>
+      )} */}
       <h1 className="text-4xl font-display">Sign Up</h1>
       <div className="h-fit w-fit rounded-lg flex flex-col items-center space-y-4">
         <form className="">
@@ -312,10 +363,11 @@ export default function SignUp() {
                   options={academicDisciplines}
                   sx={{ width: 300 }}
                   renderInput={(params) => (
-                    <TextField {...params} 
-                    label="Major"
-                    value={major}
-                    onChange={(e)=> setMajor(e.target.value)}
+                    <TextField
+                      {...params}
+                      label="Major"
+                      value={major}
+                      onChange={(e) => setMajor(e.target.value)}
                     />
                   )}
                 />
@@ -371,85 +423,102 @@ export default function SignUp() {
               </div>
             </div>
           )}
+
           {step === 1 && (
-            <div>
-              {/* Preference to live with */}
+            <div className="space-y-2 flex flex-col items-center px-1">
+              {console.log(major)};
               <div>
-                {/* pets */}
                 <div>
                   Are you willing to live with pets?
                   <Switch
-                  value={pets}
-                  onChange={() => {
-                    setShare(!pets);
-                  }}
-                  defaultChecked
-                />
+                    value={pets}
+                    onChange={() => {
+                      setPets(!pets);
+                    }}
+                    defaultChecked
+                  />
                 </div>
-                {/* Prefered Gender */}
-                What Gender do you prefer to live with?
-                <Box sx={{ minWidth: 120 }}>
-                  <FormControl fullWidth>
-                    <InputLabel id="demo-simple-select-label"></InputLabel>
-                    <Select
-                      labelId="demo-simple-select-label"
-                      id="demo-simple-select"
-                      value={targetGender}
-                      label="Preference"
-                      onChange={(e) => setTargetGender(e.target.value)}
-                    >
-                      <MenuItem value={"M"}>Male</MenuItem>
-                      <MenuItem value={"F"}>Female</MenuItem>
-                      <MenuItem value={"O"}>Other</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
+                <div className="">
+                  What Gender do you prefer to live with?
+                  <Box sx={{ minWidth: 120 }}>
+                    <FormControl fullWidth>
+                      <InputLabel id="demo-simple-select-label"></InputLabel>
+                      <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={targetGender}
+                        label="Preference"
+                        onChange={(e) => setTargetGender(e.target.value)}
+                      >
+                        <MenuItem value={"M"}>Male</MenuItem>
+                        <MenuItem value={"F"}>Female</MenuItem>
+                        <MenuItem value={"O"}>Other</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+                </div>
               </div>
-              {/* Sleep Schedule */}
-              <div>
-                I go to sleep around
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <TimePicker
-                    views={["hours"]}
-                    label="Sleep?"
-                    value={sleep}
-                    onChange={(e) => setSleep(e.target.value)}
-                  />
-                </LocalizationProvider>
-                and wake up around
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <TimePicker
-                    views={["hours"]}
-                    label="Wake?"
-                    value={wake}
-                    onChange={(e) => setWake(e.target.value)}
-                  />
-                </LocalizationProvider>
+              <div className="space-y-2">
+                <div className="flex items-center justify-center">
+                  I go to sleep at around
+                  <div className="ml-2 w-32 ">
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <TimePicker
+                        views={["hours"]}
+                        label="Sleep?"
+                        value={sleep}
+                        onChange={handleSleepChange}
+                        slotProps={{ textField: { size: "small" } }}
+                      />
+                    </LocalizationProvider>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center">
+                  and wake up around
+                  <div className="ml-2 w-32">
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <TimePicker
+                        views={["hours"]}
+                        label="Wake?"
+                        value={wake}
+                        onChange={handleWakeChange}
+                        slotProps={{ textField: { size: "small" } }}
+                      />
+                    </LocalizationProvider>
+                  </div>
+                </div>
               </div>
-              {/* Personality */}
-              <div>
+
+              <hr className="border-1 border-black w-2/3" />
+
+              <div className="items-center flex flex-col space-y-2">
                 How would you rate your personality?
-                <ToggleButtonGroup
-                  value={personality}
-                  exclusive
-                  onChange={(e) => setPersonality(e.target.value)}
-                >
-                  <ToggleButton value="left">Introvert</ToggleButton>
-                  <ToggleButton value="center">Ambivert</ToggleButton>
-                  <ToggleButton value="right">Extrovert</ToggleButton>
-                </ToggleButtonGroup>
+                <div className="">
+                  <ToggleButtonGroup
+                    value={personality}
+                    exclusive
+                    onChange={(e) => setPersonality(e.target.value)}
+                  >
+                    <ToggleButton value="Introvert">Introvert</ToggleButton>
+                    <ToggleButton value="Ambivert">Ambivert</ToggleButton>
+                    <ToggleButton value="Extrovert">Extrovert</ToggleButton>
+                  </ToggleButtonGroup>
+                </div>
               </div>
-              {/* Loud? */}
-              <div>
-                How would you describe your average noise level?
+
+              <div className="items-center flex flex-col space-y-2">
+                <h1 className="text-center">
+                  How would you describe your average noise level?
+                </h1>
                 <ToggleButtonGroup
                   value={noise}
                   exclusive
                   onChange={(e) => setNoise(e.target.value)}
                 >
-                  <ToggleButton value="left">Quiet</ToggleButton>
-                  <ToggleButton value="center">Moderate</ToggleButton>
-                  <ToggleButton value="right">Loud</ToggleButton>
+                  <ToggleButton value="Quiet">Quiet</ToggleButton>
+                  <ToggleButton value="Moderate">Moderate</ToggleButton>
+                  <ToggleButton value="Loud">Loud</ToggleButton>
                 </ToggleButtonGroup>
               </div>
               <div className="flex items-center justify-between">
@@ -515,7 +584,6 @@ export default function SignUp() {
                   />
                 </Box>
               </div>
-              {/* Like to Share? */}
               <div>
                 Are you open to sharing?
                 <Switch
@@ -526,7 +594,6 @@ export default function SignUp() {
                   defaultChecked
                 />
               </div>
-              {/* Budget */}
               <div>
                 What is your maximum rent cost?
                 <Box sx={{ width: 300 }}>
@@ -556,6 +623,44 @@ export default function SignUp() {
                 <Button
                   variant="contained"
                   color="primary"
+                  onClick={handleNext}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+          {step === 3 && (
+            <div>
+              <p>Bio</p>
+              <TextField
+                id="bio"
+                label="Talk about yourself..."
+                variant="outlined"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+              />
+              <p>Please Enter Drive link:</p>
+              <TextField
+                id="drive"
+                label="Drive Link"
+                variant="outlined"
+                value={drive}
+                onChange={(e) => setDrive(e.target.value)}
+              />
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="contained"
+                  color="primary"
                   onClick={handleSignup}
                 >
                   Sign Up
@@ -565,7 +670,7 @@ export default function SignUp() {
           )}
         </form>
         <div className="flex space-x-4">
-          <Link className="underline" to={"/login"}>
+          <Link className="underline" to={"/"}>
             Login
           </Link>
         </div>

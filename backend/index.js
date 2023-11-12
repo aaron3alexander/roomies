@@ -15,7 +15,7 @@ const uri = process.env.MONGO_URI;
 mongoose
   .connect(uri)
 .then(() => {
-    console.log('Connected to your Dylan database');
+    console.log('Connected to your roomies database');
 })
 .catch((err) => {
     console.log('Error connecting to database:', err);
@@ -46,15 +46,16 @@ const UserSchema = new mongoose.Schema({
     profile: {
         bio: String,
         pfp: String,
+        gender: String,
     },
     preferences: {
         age: Number, // [18, 30]
-        gender: String, // "Male", "Female"
+        targetGender: String, // "Male", "Female"
         sleepTime: Number, // [0, 23]
         wakeTime: Number, // [0, 23]
         allergies: [String],
         guestPolicy: Number, // [1, 5]
-        major: String,
+        // major: String,
         personality: String, // "Introvert", "Ambivert", "Extrovert"
         pets: Boolean,
         noiseLevel: String, // "Quiet", "Moderate", "Loud"
@@ -63,6 +64,7 @@ const UserSchema = new mongoose.Schema({
         monthlyBudget: Number, // [500, 2000]
     },
     likes: [String],
+    dislikes: [String],
     matches: [String],
 });
 
@@ -216,7 +218,7 @@ app.get('/users/current', isLoggedIn, (req, res) => {
 
 // API endpoint for user login
 app.post('/login', passport.authenticate('local'), (req, res) => {
-    // If the authentication is successful, the user will be available in req.user
+     // If the authentication is successful, the user will be available in req.user
     // Set the user as authenticated in the session
     req.login(req.user, (err) => {
         if (err) {
@@ -251,9 +253,9 @@ function preferencesToDistance(alice, bob, preference) {
     return bigger.filter((x) => smaller.includes(x)).length / bigger.length;
   } else if (preference === "guestPolicy") {
     return Math.abs(a - b) / 4;
-  } else if (preference === "major") {
-    return a === b ? 0 : 1;
-  } else if (preference === "personality") {
+   } //else if (preference === "major") {
+//     return a === b ? 0 : 1;
+/*   } */else if (preference === "personality") {
     const personalities = ["Introvert", "Ambivert", "Extrovert"];
     return Math.abs(personalities.indexOf(a) - personalities.indexOf(b)) / (personalities.length - 1);
   } else if (preference === "pets") {
@@ -282,7 +284,12 @@ function distance(alice, bob) {
 
 async function knn(email) {
   const user = await User.findOne({ email: email });
-  const neighbors = await User.find({ email: { $ne: email } });
+  const neighbors = await User.find({ $and: [
+    { email: { $ne: email } },
+    { email: { $nin: user.matches }},
+    { email: { $nin: user.likes }},
+    { email: { $nin: user.dislikes }},
+  ]});
   return neighbors
     .sort((a, b) => distance(user, a) - distance(user, b))
     .filter((neighbor) => distance(user, neighbor) !== Infinity)
@@ -356,12 +363,16 @@ app.post("/swipe", async (req, res) => {
   try {
     const swipee = await User.findOne({ email: req.body.swipee });
     const swiper = await User.findOne({ email: req.body.swiper });
-    if (swipee.likes.includes(req.body.swiper)) {
-      swipee.matches.push(req.body.swiper);
-      swipee.likes = swipee.likes.filter((email) => email !== req.body.swiper);
-      swiper.matches.push(req.body.swipee);
+    if (req.body.swipedRight) {
+      if (swipee.likes.includes(req.body.swiper)) {
+        swipee.matches.push(req.body.swiper);
+        swipee.likes = swipee.likes.filter((email) => email !== req.body.swiper);
+        swiper.matches.push(req.body.swipee);
+      } else {
+        swiper.likes.push(req.body.swipee);
+      }
     } else {
-      swiper.likes.push(req.body.swipee);
+      swiper.dislikes.push(req.body.swipee);
     }
     await swipee.save();
     await swiper.save();
