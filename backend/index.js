@@ -61,7 +61,9 @@ const UserSchema = new mongoose.Schema({
         cleanliness: String, // "Clean", "Moderate", "Messy"
         sharing: Boolean,
         monthlyBudget: Number, // [500, 2000]
-    }
+    },
+    likes: [String],
+    matches: [String],
 });
 
 // Add a method to the UserSchema for comparing passwords
@@ -243,6 +245,9 @@ function preferencesToDistance(alice, bob, preference) {
   } else if (preference === "allergies") {
     let bigger = a.length > b.length ? a : b;
     let smaller = a.length <= b.length? a : b;
+    if (bigger.length === 0) {
+      return 0;
+    }
     return bigger.filter((x) => smaller.includes(x)).length / bigger.length;
   } else if (preference === "guestPolicy") {
     return Math.abs(a - b) / 4;
@@ -280,7 +285,8 @@ async function knn(email) {
   const neighbors = await User.find({ email: { $ne: email } });
   return neighbors
     .sort((a, b) => distance(user, a) - distance(user, b))
-    .filter((neighbor) => distance(user, neighbor) !== Infinity);
+    .filter((neighbor) => distance(user, neighbor) !== Infinity)
+    .map((neighbor) => ({ email: neighbor.email, distance: distance(user, neighbor) }));
 }
 
 app.get('/knn', async (req, res) => {
@@ -344,6 +350,26 @@ app.post('/preferences', async (req, res) => {
         console.error('Error updating user:', error);
         res.status(500).json({ message: 'Something went wrong' });
     }
+});
+
+app.post("/swipe", async (req, res) => {
+  try {
+    const swipee = await User.findOne({ email: req.body.swipee });
+    const swiper = await User.findOne({ email: req.body.swiper });
+    if (swipee.likes.includes(req.body.swiper)) {
+      swipee.matches.push(req.body.swiper);
+      swipee.likes = swipee.likes.filter((email) => email !== req.body.swiper);
+      swiper.matches.push(req.body.swipee);
+    } else {
+      swiper.likes.push(req.body.swipee);
+    }
+    await swipee.save();
+    await swiper.save();
+    res.json({ message: "Swiped successfully" });
+  } catch (error) {
+    console.error("Error swiping:", error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
 });
 
 // Start the server
