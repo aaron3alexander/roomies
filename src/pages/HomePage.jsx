@@ -6,7 +6,7 @@ import "../index.css";
 
 import { useState } from "react";
 
-export default function HomePage() {
+export default function HomePage({ authenticatedUser, setAuthenticatedUser }) {
   const db = [
     {
       fname: "Tubs",
@@ -58,7 +58,7 @@ export default function HomePage() {
 
   return (
     <div className="homepagediv">
-      <Navbar />
+      <Navbar authenticatedUser={authenticatedUser} setAuthenticatedUser={setAuthenticatedUser} />
 
       {db.map((person) => (
         <TinderCard
