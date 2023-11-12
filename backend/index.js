@@ -23,14 +23,6 @@ mongoose
 
 // Define the User Schema
 const UserSchema = new mongoose.Schema({
-    fname: {
-        type: String,
-        required: true,
-    },
-    lname: {
-        type: String,
-        required: true,
-    },
     email: {
         type: String,
         required: true,
@@ -39,18 +31,35 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    fname: {
+        type: String,
+        required: true,
+    },
+    lname: {
+        type: String,
+        required: true,
+    },
+    phone: {
+        type: String,
+        required: true,
+    },
+    profile: {
+        bio: String,
+        pfp: String,
+    },
     preferences: {
+        age: Number, // [18, 30]
         gender: String, // "Male", "Female"
         sleepTime: Number, // [0, 23]
         wakeTime: Number, // [0, 23]
         allergies: [String],
-        guestPolicy: String, // "Never", "Sometimes", "Often"
+        guestPolicy: Number, // [1, 5]
         major: String,
-        personality: String, // "Let's be BFFs!", "Open to hang", "Leave me alone and I'll leave you alone"
-        pets: String, // "Yes", "No"
+        personality: String, // "Introvert", "Ambivert", "Extrovert"
+        pets: Boolean,
         noiseLevel: String, // "Quiet", "Moderate", "Loud"
         cleanliness: String, // "Clean", "Moderate", "Messy"
-        sharing: String, // "What's mine is yours", "Ask first", "Don't touch my stuff"
+        sharing: Boolean,
         monthlyBudget: Number, // [500, 2000]
     }
 });
@@ -224,7 +233,9 @@ function preferencesToDistance(alice, bob, preference) {
   const a = alice.preferences[preference];
   const b = bob.preferences[preference];
   if (preference === "gender") {
-    return a === b ? 0 : Infinity;;
+    return a === b ? 0 : Infinity;
+  } else if (preference === "age") {
+    return Math.abs(a - b) / 22;
   } else if (preference === "sleepTime") {
     return Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
   } else if (preference === "wakeTime") {
@@ -234,12 +245,11 @@ function preferencesToDistance(alice, bob, preference) {
     let smaller = a.length <= b.length? a : b;
     return bigger.filter((x) => smaller.includes(x)).length / bigger.length;
   } else if (preference === "guestPolicy") {
-    const policies = ["Never", "Sometimes", "Often"];
-    return Math.abs(policies.indexOf(a) - policies.indexOf(b)) / (policies.length - 1);
+    return Math.abs(a - b) / 4;
   } else if (preference === "major") {
     return a === b ? 0 : 1;
   } else if (preference === "personality") {
-    const personalities = ["Let's be BFFs!", "Open to hang", "Leave me alone and I'll leave you alone"];
+    const personalities = ["Introvert", "Ambivert", "Extrovert"];
     return Math.abs(personalities.indexOf(a) - personalities.indexOf(b)) / (personalities.length - 1);
   } else if (preference === "pets") {
     return a === b ? 0 : 1;
@@ -250,8 +260,7 @@ function preferencesToDistance(alice, bob, preference) {
     const cleanlinessLevels = ["Clean", "Moderate", "Messy"];
     return Math.abs(cleanlinessLevels.indexOf(a) - cleanlinessLevels.indexOf(b)) / (cleanlinessLevels.length - 1);
   } else if (preference === "sharing") {
-    const sharingLevels = ["What's mine is yours", "Ask first", "Don't touch my stuff"];
-    return Math.abs(sharingLevels.indexOf(a) - sharingLevels.indexOf(b)) / (sharingLevels.length - 1);
+    return a === b ? 0 : 1;
   } else if (preference === 'monthlyBudget') {
     return Math.abs(a - b) / 1500;
   }
@@ -284,7 +293,42 @@ app.get('/knn', async (req, res) => {
   }
 });
 
-async function update(email, data) {
+async function getUser(email) {
+    return await User.findOne({ email });
+}
+
+app.get('/user/:email', async (req, res) => {
+    try {
+        const user = await getUser(req.params.email);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json(user);
+    } catch (error) {
+        console.error('Error getting user:', error);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+});
+
+async function updateProfile(email, data) {
+    const user = await User.findOne({ email });
+    for (const profile of Object.keys(data)) {
+        user.profile[profile] = data[profile];
+    }
+    await user.save();
+}
+
+app.post('/profile', async (req, res) => {
+    try {
+        await updateProfile(req.body.email, req.body.data);
+        res.json({ message: 'Updated successfully' });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
+});
+
+async function updatePreferences(email, data) {
     const user = await User.findOne({ email });
     for (const preference of Object.keys(data)) {
         user.preferences[preference] = data[preference];
@@ -292,9 +336,9 @@ async function update(email, data) {
     await user.save();
 }
 
-app.post('/update', async (req, res) => {
+app.post('/preferences', async (req, res) => {
     try {
-        await update(req.body.email, req.body.data);
+        await updatePreferences(req.body.email, req.body.data);
         res.json({ message: 'Updated successfully' });
     } catch (error) {
         console.error('Error updating user:', error);
