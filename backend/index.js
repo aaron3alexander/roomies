@@ -39,10 +39,8 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    gender: {
-        type: String,
-    },
     preferences: {
+        gender: String, // "Male", "Female"
         sleepTime: Number, // [0, 23]
         wakeTime: Number, // [0, 23]
         allergies: [String],
@@ -225,7 +223,9 @@ app.post('/login', passport.authenticate('local'), (req, res) => {
 function preferencesToDistance(alice, bob, preference) {
   const a = alice.preferences[preference];
   const b = bob.preferences[preference];
-  if (preference === "sleepTime") {
+  if (preference === "gender") {
+    return a === b ? 0 : Infinity;;
+  } else if (preference === "sleepTime") {
     return Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
   } else if (preference === "wakeTime") {
     return Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
@@ -259,18 +259,15 @@ function preferencesToDistance(alice, bob, preference) {
 }
 
 function distance(alice, bob) {
-  if (alice.gender !== bob.gender) {
-    return Infinity;
-  }
   let sum = 0;
-  for (const preference in alice.preferences) {
+  for (const preference of Object.keys(alice.preferences)) {
     sum += Math.pow(preferencesToDistance(alice, bob, preference), 2);
   }
   return Math.sqrt(sum);
 }
 
 async function knn(email) {
-  const user = await User.find({ email: email });
+  const user = await User.findOne({ email: email });
   const neighbors = await User.find({ email: { $ne: email } });
   return neighbors
     .sort((a, b) => distance(user, a) - distance(user, b))
@@ -279,12 +276,30 @@ async function knn(email) {
 
 app.get('/knn', async (req, res) => {
   try {
-    const neighbors = await knn(req.body.email);
+    const neighbors = await knn(req.query.email);
     res.json(neighbors);
   } catch (error) {
     console.error('Error getting neighbors:', error);
     res.status(500).json({ message: 'Something went wrong' });
   }
+});
+
+async function update(email, data) {
+    const user = await User.findOne({ email });
+    for (const preference of Object.keys(data)) {
+        user.preferences[preference] = data[preference];
+    }
+    await user.save();
+}
+
+app.post('/update', async (req, res) => {
+    try {
+        await update(req.body.email, req.body.data);
+        res.json({ message: 'Updated successfully' });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ message: 'Something went wrong' });
+    }
 });
 
 // Start the server
