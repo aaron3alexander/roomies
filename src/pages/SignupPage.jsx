@@ -678,7 +678,7 @@ export default function SignUp() {
           )}
         </form>
         <div className="flex space-x-4">
-          <Link className="underline" to={"/login"}>
+          <Link className="underline" to={"/"}>
             Login
           </Link>
         </div>
