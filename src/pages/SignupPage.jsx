@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import { Link } from "react-router-dom";
@@ -22,8 +23,15 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Slider from "@mui/material/Slider";
 import Switch from "@mui/material/Switch";
 import Autocomplete from "@mui/material/Autocomplete";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import "dayjs/locale/en"; // import the locale you need
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export default function SignUp() {
+  dayjs.tz.setDefault("America/Chicago");
   //Menu
   const MenuProps = {
     PaperProps: {
@@ -200,6 +208,8 @@ export default function SignUp() {
       label: "Quite Often",
     },
   ];
+  const [step, setStep] = useState(0);
+  // const [showMessage, setShowMessage] = useState(false);
   //Our allergy options
   const allAllergies = ["Nuts", "Fish", "Dairy", "Veat", "Gluten"];
   const [fName, setfName] = useState("");
@@ -207,9 +217,8 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [step, setStep] = useState(0);
-  const [wake, setWake] = useState(dayjs("2022-04-17T15:00"));
-  const [sleep, setSleep] = useState(dayjs("2022-04-17T15:00"));
+  const [wake, setWake] = useState(dayjs(""));
+  const [sleep, setSleep] = useState(dayjs(""));
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [targetGender, setTargetGender] = useState("");
@@ -218,18 +227,25 @@ export default function SignUp() {
   const [allergies, setAllergies] = useState([]);
   const [company, setCompany] = useState(1);
   const [share, setShare] = useState(true);
-  const [budget, setBudget] = useState(true);
+  const [budget, setBudget] = useState();
   const [pets, setPets] = useState(true);
-  const [major, setMajor] = useState(true);
+  const [major, setMajor] = useState();
+  const [clean, setClean] = useState();
+  const [bio, setBio] = useState();
+  const [drive, setDrive] = useState();
 
+  const handleSleepChange = (newSleepTime) => {
+    setSleep(newSleepTime);
+  };
+  const handleWakeChange = (newWakeTime) => {
+    setWake(newWakeTime);
+  };
   // handle multiple allergies
   const handleAllergies = (event) => {
     const {
-      target: { allergies },
+      target: { value },
     } = event;
-    setAllergies(
-      typeof allergies === "string" ? allergies.split(",") : allergies
-    );
+    setAllergies(typeof value === "string" ? value.split(",") : value);
   };
   //Handle signup multiple "pages"
   const handleNext = () => {
@@ -241,14 +257,65 @@ export default function SignUp() {
     // Increment the step to show the next set of preferences
     setStep((prevStep) => prevStep - 1);
   };
-  const handleSignup = () => {
-    // Implement your login logic here
+  // const { errors } = formState;//checking for errors
+  const handleSignup = async () => {
+    // Implement your Signup logic here
+    const data = {
+      fname: fName,
+      lname: lName,
+      phone: phone,
+      email: email,
+      age: age,
+      gender: gender,
+      major: major,
+      targetGender: targetGender,
+      wakeTime: wake,
+      sleepTime: sleep,
+      personality: personality,
+      noiseLevel: noise,
+      allergies: allergies,
+      guestPolicy: company,
+      sharing: share,
+      monthlyBudget: budget,
+      pets: pets,
+      cleanliness: clean,
+      bio: bio,
+      pfp: drive,
+    };
+    console.log(data);
+    try {
+      const response = await axios.post("http://localhost:4000/register", data); //sends data to db
+      console.log("Basic data Registered Successfully");
+      response = await axios.post("http://localhost:4000/preferences", data); //sends data to db
+      console.log("Preferences Registered Successfully");
+      // setShowForm(false); //hides form and shows validation for registering
+    } catch (error) {
+      // if (error.response.status == 400) {
+      //   setShowMessage(true); //tells user email is already being used
+      // }
+      console.log(error.response);
+      console.log("Error registering user:", error);
+    }
     console.log(
-      `Signing up with Email: ${email}, 
-      Password: ${password}, 
-      First Name: ${fName}, 
-      Last Name: ${lName}, 
-      Phone: ${phone}`
+      `Signing up with Email: ${email},
+      Password: ${password},
+      First Name: ${fName},
+      Last Name: ${lName},
+      Phone: ${phone},
+      Age: ${age},
+      Gender: ${gender},
+      Major: ${major},
+      Target Gender: ${targetGender},
+      Wake up Time: ${wake},
+      Sleep Time: ${sleep},
+      Personality: ${personality},
+      How Noisy: ${noise},
+      Allergies: ${allergies},
+      Company Often? ${company},
+      Like to share? ${share},
+      Max Rent: ${budget},
+      Live with pets? ${pets},
+      `
     );
   };
 
@@ -260,6 +327,11 @@ export default function SignUp() {
 
   return (
     <div className="w-full  h-screen flex flex-col justify-evenly items-center p-4">
+      {/* {showMessage && (
+        <div class="alert alert-danger show text-center" role="alert">
+          This email is aleady being used! Please try a different email!
+        </div>
+      )} */}
       <h1 className="text-4xl font-display">Sign Up</h1>
       <div className="h-fit w-fit rounded-lg flex flex-col items-center space-y-4">
         <form className="">
@@ -312,10 +384,11 @@ export default function SignUp() {
                   options={academicDisciplines}
                   sx={{ width: 300 }}
                   renderInput={(params) => (
-                    <TextField {...params} 
-                    label="Major"
-                    value={major}
-                    onChange={(e)=> setMajor(e.target.value)}
+                    <TextField
+                      {...params}
+                      label="Major"
+                      value={major}
+                      onChange={(e) => setMajor(e.target.value)}
                     />
                   )}
                 />
@@ -379,12 +452,12 @@ export default function SignUp() {
                 <div>
                   Are you willing to live with pets?
                   <Switch
-                  value={pets}
-                  onChange={() => {
-                    setShare(!pets);
-                  }}
-                  defaultChecked
-                />
+                    value={pets}
+                    onChange={() => {
+                      setShare(!pets);
+                    }}
+                    defaultChecked
+                  />
                 </div>
                 {/* Prefered Gender */}
                 What Gender do you prefer to live with?
@@ -413,7 +486,7 @@ export default function SignUp() {
                     views={["hours"]}
                     label="Sleep?"
                     value={sleep}
-                    onChange={(e) => setSleep(e.target.value)}
+                    onChange={handleSleepChange}
                   />
                 </LocalizationProvider>
                 and wake up around
@@ -422,7 +495,7 @@ export default function SignUp() {
                     views={["hours"]}
                     label="Wake?"
                     value={wake}
-                    onChange={(e) => setWake(e.target.value)}
+                    onChange={handleWakeChange}
                   />
                 </LocalizationProvider>
               </div>
@@ -434,9 +507,9 @@ export default function SignUp() {
                   exclusive
                   onChange={(e) => setPersonality(e.target.value)}
                 >
-                  <ToggleButton value="left">Introvert</ToggleButton>
-                  <ToggleButton value="center">Ambivert</ToggleButton>
-                  <ToggleButton value="right">Extrovert</ToggleButton>
+                  <ToggleButton value="Introvert">Introvert</ToggleButton>
+                  <ToggleButton value="Ambivert">Ambivert</ToggleButton>
+                  <ToggleButton value="Extrovert">Extrovert</ToggleButton>
                 </ToggleButtonGroup>
               </div>
               {/* Loud? */}
@@ -447,9 +520,9 @@ export default function SignUp() {
                   exclusive
                   onChange={(e) => setNoise(e.target.value)}
                 >
-                  <ToggleButton value="left">Quiet</ToggleButton>
-                  <ToggleButton value="center">Moderate</ToggleButton>
-                  <ToggleButton value="right">Loud</ToggleButton>
+                  <ToggleButton value="Quiet">Quiet</ToggleButton>
+                  <ToggleButton value="Moderate">Moderate</ToggleButton>
+                  <ToggleButton value="Loud">Loud</ToggleButton>
                 </ToggleButtonGroup>
               </div>
               <div className="flex items-center justify-between">
@@ -556,7 +629,47 @@ export default function SignUp() {
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={handleSignup}
+                  onClick={handleNext}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+          {step === 3 && (
+            <div>
+              <p>Bio</p>
+              <TextField
+                id="bio"
+                label="Talk about yourself..."
+                variant="outlined"
+                type="text"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+              />
+              <p>Please Enter Drive link:</p>
+              <TextField
+                id="drive"
+                label="Drive Link"
+                variant="outlined"
+                type="text"
+                value={drive}
+                onChange={(e) => setDrive(e.target.value)}
+              />
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleBack}
+                >
+                  Back
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleSignup()}
                 >
                   Sign Up
                 </Button>
