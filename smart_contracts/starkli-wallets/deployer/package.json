@@ -1,0 +1,8 @@
+{
+  "name": "hardhat-project",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
+    "@shardlabs/starknet-hardhat-plugin": "^0.8.0-alpha.5",
+    "hardhat": "^2.19.0"
+  }
+}
