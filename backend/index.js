@@ -15,7 +15,7 @@ const uri = process.env.MONGO_URI;
 mongoose
   .connect(uri)
 .then(() => {
-    console.log('Connected to your Dylan database');
+    console.log('Connected to your roomies database');
 })
 .catch((err) => {
     console.log('Error connecting to database:', err);
