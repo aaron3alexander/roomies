@@ -13,12 +13,12 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@hookform/resolvers": "^3.3.2",
+    "@mui/icons-material": "^5.14.16",
     "@mui/material": "^5.14.17",
     "@mui/x-date-pickers": "^6.18.1",
+    "@react-spring/web": "^9.5.5",
     "axios": "^1.6.1",
     "dayjs": "^1.11.10",
-    "@mui/icons-material": "^5.14.16",
-    "@react-spring/web": "^9.5.5",
     "localforage": "^1.10.0",
     "match-sorter": "^6.3.1",
     "react": "^18.2.0",
@@ -29,6 +29,7 @@
     "react-tinder-card": "^1.6.4"
   },
   "devDependencies": {
+    "@shardlabs/starknet-hardhat-plugin": "^0.8.0-alpha.5",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@vitejs/plugin-react": "^4.0.3",
