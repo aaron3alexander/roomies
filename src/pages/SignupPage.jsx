@@ -26,11 +26,13 @@ import Autocomplete from "@mui/material/Autocomplete";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import "dayjs/locale/en"; // import the locale you need
+import { useNavigate } from "react-router-dom";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export default function SignUp() {
+  const navigate = useNavigate();
   dayjs.tz.setDefault("America/Chicago");
   //Menu
   const MenuProps = {
@@ -267,7 +269,7 @@ export default function SignUp() {
       password: password,
       age: age,
       gender: gender,
-      major: major,
+      // major: major,
       targetGender: targetGender,
       wakeTime: wake.hour(),
       sleepTime: sleep.hour(),
@@ -288,11 +290,9 @@ export default function SignUp() {
       console.log("Basic data Registered Successfully");
       response = await axios.post("http://localhost:4000/preferences", {email,data}); //sends data to db
       console.log("Preferences Registered Successfully");
-      // setShowForm(false); //hides form and shows validation for registering
+      console.log("Registered Successfully");
+      navigate("/");
     } catch (error) {
-      // if (error.response.status == 400) {
-      //   setShowMessage(true); //tells user email is already being used
-      // }
       console.log(error.response);
       console.log("Error registering user:", error);
     }
@@ -367,7 +367,7 @@ export default function SignUp() {
                       {...params}
                       label="Major"
                       value={major}
-                      onChange={(e) => setMajor()}
+                      onChange={(e) => setMajor(e.target.value)}
                     />
                   )}
                 />
@@ -637,7 +637,6 @@ export default function SignUp() {
                 id="bio"
                 label="Talk about yourself..."
                 variant="outlined"
-                type="text"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
               />
@@ -646,7 +645,6 @@ export default function SignUp() {
                 id="drive"
                 label="Drive Link"
                 variant="outlined"
-                type="text"
                 value={drive}
                 onChange={(e) => setDrive(e.target.value)}
               />

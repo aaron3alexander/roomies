@@ -55,7 +55,7 @@ const UserSchema = new mongoose.Schema({
         wakeTime: Number, // [0, 23]
         allergies: [String],
         guestPolicy: Number, // [1, 5]
-        major: String,
+        // major: String,
         personality: String, // "Introvert", "Ambivert", "Extrovert"
         pets: Boolean,
         noiseLevel: String, // "Quiet", "Moderate", "Loud"
@@ -253,9 +253,9 @@ function preferencesToDistance(alice, bob, preference) {
     return bigger.filter((x) => smaller.includes(x)).length / bigger.length;
   } else if (preference === "guestPolicy") {
     return Math.abs(a - b) / 4;
-  } else if (preference === "major") {
-    return a === b ? 0 : 1;
-  } else if (preference === "personality") {
+   } //else if (preference === "major") {
+//     return a === b ? 0 : 1;
+/*   } */else if (preference === "personality") {
     const personalities = ["Introvert", "Ambivert", "Extrovert"];
     return Math.abs(personalities.indexOf(a) - personalities.indexOf(b)) / (personalities.length - 1);
   } else if (preference === "pets") {
