@@ -39,6 +39,22 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    gender: {
+        type: String,
+    },
+    preferences: {
+        sleepTime: Number, // [0, 23]
+        wakeTime: Number, // [0, 23]
+        allergies: [String],
+        guestPolicy: String, // "Never", "Sometimes", "Often"
+        major: String,
+        personality: String, // "Let's be BFFs!", "Open to hang", "Leave me alone and I'll leave you alone"
+        pets: String, // "Yes", "No"
+        noiseLevel: String, // "Quiet", "Moderate", "Loud"
+        cleanliness: String, // "Clean", "Moderate", "Messy"
+        sharing: String, // "What's mine is yours", "Ask first", "Don't touch my stuff"
+        monthlyBudget: Number,
+    }
 });
 
 // Add a method to the UserSchema for comparing passwords
@@ -64,14 +80,12 @@ app.use(express.json());
 
 // Setup express-session middleware
 app.use(
-    session({
-    secret: 'your-secret-key',
+  session({
+    secret: "your-secret-key",
     resave: false,
     saveUninitialized: true,
-    cookie: { 
-
-    },
-})
+    cookie: {},
+  })
 );
 
 // Initialize Passport middleware
@@ -207,6 +221,40 @@ app.post('/login', passport.authenticate('local'), (req, res) => {
         res.status(200).json({ message: 'Login successful', user: req.user });
     });
 });
+
+function preferencesToDistance(alice, bob, preference) {
+  const a = alice.preferences[preference];
+  const b = bob.preferences[preference];
+  if (preference === "sleepTime") {
+    return Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
+  } else if (preference === "wakeTime") {
+    return Math.min(Math.abs(a - b), 24 - Math.abs(a - b));
+  } else if (preference === "allergies") {
+    let bigger = a.length > b.length ? a : b;
+    let smaller = a.length <= b.length? a : b;
+    return bigger.filter((x) => smaller.includes(x)).length / bigger.length;
+  }
+  return 0.5;
+}
+
+function distance(alice, bob) {
+  if (alice.gender !== bob.gender) {
+    return Infinity;
+  }
+  let sum = 0;
+  for (const preference in alice.preferences) {
+    sum += Math.pow(preferencesToDistance(alice, bob, preference), 2);
+  }
+  return Math.sqrt(sum);
+}
+
+async function knn(email) {
+  const user = await User.find({ email: email });
+  const neighbors = await User.find({ email: { $ne: email } });
+  return neighbors
+    .sort((a, b) => distance(user, a) - distance(user, b))
+    .filter((neighbor) => distance(user, neighbor) !== Infinity);
+}
 
 // Start the server
 app.listen(port, () => {
