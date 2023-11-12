@@ -57,7 +57,7 @@ export default function HomePage({ authenticatedUser, setAuthenticatedUser }) {
   };
 
   return (
-    <div className="">
+    <div className="homepagediv">
       <Navbar authenticatedUser={authenticatedUser} setAuthenticatedUser={setAuthenticatedUser} />
 
       {db.map((person) => (
