@@ -26,11 +26,13 @@ import Autocomplete from "@mui/material/Autocomplete";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import "dayjs/locale/en"; // import the locale you need
+import { useNavigate } from "react-router-dom";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 export default function SignUp() {
+  const navigate = useNavigate();
   dayjs.tz.setDefault("America/Chicago");
   //Menu
   const MenuProps = {
@@ -213,7 +215,7 @@ export default function SignUp() {
   const [step, setStep] = useState(0);
   // const [showMessage, setShowMessage] = useState(false);
 
-  const allAllergies = ["Nuts", "Fish", "Dairy", "Veat", "Gluten"];
+  const allAllergies = ["Nuts", "Fish", "Dairy", "Wheat", "Gluten"];
   const [fName, setfName] = useState("");
   const [lName, setlName] = useState("");
   const [email, setEmail] = useState("");
@@ -242,6 +244,9 @@ export default function SignUp() {
   const handleWakeChange = (newWakeTime) => {
     setWake(newWakeTime);
   };
+  const handleMajor = (newMajor) => {
+    setMajor(newMajor.target.value);
+  };
   // handle multiple allergies
   const handleAllergies = (event) => {
     const {
@@ -261,12 +266,13 @@ export default function SignUp() {
       lname: lName,
       phone: phone,
       email: email,
+      password: password,
       age: age,
       gender: gender,
-      major: major,
+      // major: major,
       targetGender: targetGender,
-      wakeTime: wake,
-      sleepTime: sleep,
+      wakeTime: wake.hour(),
+      sleepTime: sleep.hour(),
       personality: personality,
       noiseLevel: noise,
       allergies: allergies,
@@ -282,37 +288,14 @@ export default function SignUp() {
     try {
       let response = await axios.post("http://localhost:4000/register", data); //sends data to db
       console.log("Basic data Registered Successfully");
-      response = await axios.post("http://localhost:4000/preferences", data); //sends data to db
+      response = await axios.post("http://localhost:4000/preferences", {email,data}); //sends data to db
       console.log("Preferences Registered Successfully");
-      // setShowForm(false); //hides form and shows validation for registering
+      console.log("Registered Successfully");
+      navigate("/");
     } catch (error) {
-      // if (error.response.status == 400) {
-      //   setShowMessage(true); //tells user email is already being used
-      // }
       console.log(error.response);
       console.log("Error registering user:", error);
     }
-    console.log(
-      `Signing up with Email: ${email},
-      Password: ${password},
-      First Name: ${fName},
-      Last Name: ${lName},
-      Phone: ${phone},
-      Age: ${age},
-      Gender: ${gender},
-      Major: ${major},
-      Target Gender: ${targetGender},
-      Wake up Time: ${wake},
-      Sleep Time: ${sleep},
-      Personality: ${personality},
-      How Noisy: ${noise},
-      Allergies: ${allergies},
-      Company Often? ${company},
-      Like to share? ${share},
-      Max Rent: ${budget},
-      Live with pets? ${pets},
-      `
-    );
   };
 
   //Used to debugg
@@ -443,13 +426,14 @@ export default function SignUp() {
 
           {step === 1 && (
             <div className="space-y-2 flex flex-col items-center px-1">
+              {console.log(major)};
               <div>
                 <div>
                   Are you willing to live with pets?
                   <Switch
                     value={pets}
                     onChange={() => {
-                      setShare(!pets);
+                      setPets(!pets);
                     }}
                     defaultChecked
                   />
@@ -653,7 +637,6 @@ export default function SignUp() {
                 id="bio"
                 label="Talk about yourself..."
                 variant="outlined"
-                type="text"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
               />
@@ -662,7 +645,6 @@ export default function SignUp() {
                 id="drive"
                 label="Drive Link"
                 variant="outlined"
-                type="text"
                 value={drive}
                 onChange={(e) => setDrive(e.target.value)}
               />
