@@ -15,7 +15,7 @@ const uri = process.env.MONGO_URI;
 mongoose
   .connect(uri)
 .then(() => {
-    console.log('Connected to your Dylan database');
+    console.log('Connected to your roomies database');
 })
 .catch((err) => {
     console.log('Error connecting to database:', err);
@@ -46,10 +46,11 @@ const UserSchema = new mongoose.Schema({
     profile: {
         bio: String,
         pfp: String,
+        gender: String,
     },
     preferences: {
         age: Number, // [18, 30]
-        gender: String, // "Male", "Female"
+        targetGender: String, // "Male", "Female"
         sleepTime: Number, // [0, 23]
         wakeTime: Number, // [0, 23]
         allergies: [String],
@@ -63,6 +64,7 @@ const UserSchema = new mongoose.Schema({
         monthlyBudget: Number, // [500, 2000]
     },
     likes: [String],
+    dislikes: [String],
     matches: [String],
 });
 
@@ -282,7 +284,12 @@ function distance(alice, bob) {
 
 async function knn(email) {
   const user = await User.findOne({ email: email });
-  const neighbors = await User.find({ email: { $ne: email } });
+  const neighbors = await User.find({ $and: [
+    { email: { $ne: email } },
+    { email: { $nin: user.matches }},
+    { email: { $nin: user.likes }},
+    { email: { $nin: user.dislikes }},
+  ]});
   return neighbors
     .sort((a, b) => distance(user, a) - distance(user, b))
     .filter((neighbor) => distance(user, neighbor) !== Infinity)
@@ -356,12 +363,16 @@ app.post("/swipe", async (req, res) => {
   try {
     const swipee = await User.findOne({ email: req.body.swipee });
     const swiper = await User.findOne({ email: req.body.swiper });
-    if (swipee.likes.includes(req.body.swiper)) {
-      swipee.matches.push(req.body.swiper);
-      swipee.likes = swipee.likes.filter((email) => email !== req.body.swiper);
-      swiper.matches.push(req.body.swipee);
+    if (req.body.swipedRight) {
+      if (swipee.likes.includes(req.body.swiper)) {
+        swipee.matches.push(req.body.swiper);
+        swipee.likes = swipee.likes.filter((email) => email !== req.body.swiper);
+        swiper.matches.push(req.body.swipee);
+      } else {
+        swiper.likes.push(req.body.swipee);
+      }
     } else {
-      swiper.likes.push(req.body.swipee);
+      swiper.dislikes.push(req.body.swipee);
     }
     await swipee.save();
     await swiper.save();
