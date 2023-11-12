@@ -8,13 +8,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
 
   const handleLogin = () => {
-    // Implement your login logic here
     console.log(`Logging in with Email: ${email} and Password: ${password}`);
   };
 
   return (
-    <div className="w-full h-screen flex flex-col justify-evenly items-center p-4">
-      <h1 className="text-4xl font-display">log in</h1>
+    <div className="w-full h-screen flex flex-col justify-center items-center p-4">
+      <h1 className="text-4xl font-display mb-8">log in</h1>
       <div className="h-fit w-fit rounded-lg flex flex-col items-center space-y-4">
         <form className="px-4 flex flex-col items-center space-y-4">
           <TextField
