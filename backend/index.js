@@ -46,10 +46,11 @@ const UserSchema = new mongoose.Schema({
     profile: {
         bio: String,
         pfp: String,
+        gender: String,
     },
     preferences: {
         age: Number, // [18, 30]
-        gender: String, // "Male", "Female"
+        targetGender: String, // "Male", "Female"
         sleepTime: Number, // [0, 23]
         wakeTime: Number, // [0, 23]
         allergies: [String],
